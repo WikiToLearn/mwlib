@@ -68,10 +68,6 @@ def make_collection_id(data):
     for key in (
         'base_url',
         'script_extension',
-        'template_blacklist',
-        'template_exclusion_category',
-        'print_template_prefix',
-        'print_template_pattern',
         'login_credentials',
     ):
         sio.write(repr(data.get(key)))
@@ -268,8 +264,8 @@ class Application(object):
         return collection_id
 
     def is_good_baseurl(self, url):
-        netloc = urlparse.urlparse(url)[1].lower()
-        if netloc.startswith("localhost") or netloc.startswith("127.0") or netloc.startswith("192.168"):
+        netloc = urlparse.urlparse(url)[1].split(':')[0].lower()
+        if netloc == "localhost" or netloc.startswith("127.0.") or netloc.startswith("192.168."):
             return False
         return True
 
@@ -281,10 +277,6 @@ class Application(object):
             writer=g('writer', self.default_writer),
             base_url=g('base_url'),
             writer_options=g('writer_options', ''),
-            template_blacklist=g('template_blacklist', ''),
-            template_exclusion_category=g('template_exclusion_category', ''),
-            print_template_prefix=g('print_template_prefix', ''),
-            print_template_pattern=g('print_template_pattern', ''),
             login_credentials=g('login_credentials', ''),
             force_render=bool(g('force_render')),
             script_extension=g('script_extension', ''),
@@ -311,7 +303,7 @@ class Application(object):
 
         if base_url and not self.is_good_baseurl(base_url):
             log.bad("bad base_url: %r" % (base_url, ))
-            return self.error_response("bad base_url %r. check your $wgServer and $wgScriptPath variables" % (base_url, ))
+            return self.error_response("bad base_url %r. check your $wgServer and $wgScriptPath variables. localhost, 192.168.*.* and 127.0.*.* are not allowed." % (base_url, ))
 
         log.info('render %s %s' % (collection_id, writer))
 
@@ -464,7 +456,7 @@ def main():
     # pywsgi.WSGIHandler.log_request = lambda *args, **kwargs: None
 
     from mwlib import argv
-    opts,  args = argv.parse(sys.argv[1:], "--qserve= --port= -i= --interface=")
+    opts,  args = argv.parse(sys.argv[1:], "--disable-all-writers --qserve= --port= -i= --interface=")
     qs = []
     port = 8899
     interface = "0.0.0.0"
@@ -473,9 +465,12 @@ def main():
             port = int(a)
         elif o == "--qserve":
             qs.append(a)
+        elif o == "--disable-all-writers":
+            name2writer.clear()
         elif o in ("-i", "--interface"):
             interface = a
 
+    print "using the following writers", sorted(name2writer.keys())
 
     qs += args
 

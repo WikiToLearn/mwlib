@@ -67,25 +67,12 @@ def system(args, timeout=None):
 
 
 def _get_args(writer_options=None,
-              template_blacklist=None,
-              template_exclusion_category=None,
-              print_template_prefix=None,
-              print_template_pattern=None,
               language=None,
               zip_only=False,
               login_credentials=None,
               **kw):
 
     args = []
-
-    if template_blacklist:
-        args.extend(['--template-blacklist', template_blacklist])
-    if template_exclusion_category:
-        args.extend(['--template-exclusion-category', template_exclusion_category])
-    if print_template_prefix:
-        args.extend(['--print-template-prefix', print_template_prefix])
-    if print_template_pattern:
-        args.extend(['--print-template-pattern', print_template_pattern])
 
     if login_credentials:
         username, password, domain = (login_credentials.split(":", 3) + [None] * 3)[:3]
@@ -184,7 +171,7 @@ class commands(object):
         return doit(**params)
 
 
-def start_serving_files(cachedir, port):
+def start_serving_files(cachedir, address, port):
     from gevent.pywsgi import WSGIServer
     from bottle import route, static_file, default_app
     cachedir = os.path.abspath(cachedir)
@@ -195,7 +182,7 @@ def start_serving_files(cachedir, port):
         if filename.endswith(".rl"):
             response.headers["Content-Disposition"] = "inline; filename=collection.pdf"
         return response
-    s = WSGIServer(("", port), default_app())
+    s = WSGIServer((address, port), default_app())
     s.start()
     return s
 
@@ -212,10 +199,11 @@ def make_cachedir(cachedir):
 def main():
     global cachedir, cacheurl
     numgreenlets = 10
+    http_address = '0.0.0.0'
     http_port = 8898
     serve_files = True
     from mwlib import argv
-    opts, args = argv.parse(sys.argv[1:], "--no-serve-files --serve-files-port= --serve-files --cachedir= --url= --numprocs=")
+    opts, args = argv.parse(sys.argv[1:], "--no-serve-files --serve-files-port= --serve-files-address= --serve-files --cachedir= --url= --numprocs=")
     for o, a in opts:
         if o == "--cachedir":
             cachedir = a
@@ -227,12 +215,14 @@ def main():
             serve_files = False
         elif o == "--serve-files-port":
             http_port = int(a)
+        elif o == "--serve-files-address":
+            http_address = str(a)
 
     if cachedir is None:
         sys.exit("nslave: missing --cachedir argument")
 
     if serve_files:
-        wsgi_server = start_serving_files(cachedir, http_port)
+        wsgi_server = start_serving_files(cachedir, http_address, http_port)
         port = wsgi_server.socket.getsockname()[1]
         if not cacheurl:
             cacheurl = "http://%s:%s/cache" % (find_ip(), port)

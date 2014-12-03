@@ -1,8 +1,10 @@
 #! /usr/bin/env py.test
 # -*- coding: utf-8 -*-
 
-import pytest, gevent, nserve, urllib, urllib2, bottle
-import wsgi_intercept.urllib2_intercept
+import pytest, gevent, urllib, urllib2, bottle
+from mwlib import nserve
+
+import wsgi_intercept.urllib_intercept
 
 try:
     import simplejson as json
@@ -29,8 +31,8 @@ raise_greenletexit = get_exception_raiser("killed", gevent.GreenletExit)
 
 
 def pytest_funcarg__app(request):
-    wsgi_intercept.urllib2_intercept.install_opener()
-    request.addfinalizer(wsgi_intercept.urllib2_intercept.uninstall_opener)
+    wsgi_intercept.urllib_intercept.install_opener()
+    request.addfinalizer(wsgi_intercept.urllib_intercept.uninstall_opener)
     wsgi_intercept.add_wsgi_intercept('app.de', 80, bottle.default_app)
     request.addfinalizer(lambda: wsgi_intercept.remove_wsgi_intercept("app.de", 80))
     return None

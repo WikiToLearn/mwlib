@@ -4,6 +4,62 @@ Changelog
 
 mwlib
 ==========================
+2014-02-19 mwlib 0.15.15
+------------------------
+- catch IOError when reading image sizes
+- prevent race conditions in rlwriter.toc by using a tmp directory
+
+2014-01-13 mwlib 0.15.14
+------------------------
+- set user agent from environment variable MWLIB_USER_AGENT
+
+2014-01-09 mwlib 0.15.13
+------------------------
+- add --disable-all-writers argument to nserve
+- add note about professional support
+- adapt bot filtering a bit
+
+2013-11-11 mwlib 0.15.12
+------------------------
+- workaround 'first run' tox issue
+- fix tests with new wsgi_intercept 0.6 and require that version
+- Match IPv6 addresses as anonymous users
+- handle __NOGLOSSARY__ magicword
+- Fix #37
+
+2013-08-09 mwlib 0.15.11
+-------------------------
+- fix possible problems on solaris containers in init_tmp_cleaner
+- don't waste people's lifetime in init_tmp_cleaner
+- fix xnet tests
+- use os.urandom in utils.uid
+- generate junitxml files
+- remove empty reference nodes
+
+2013-07-04 mwlib 0.15.10
+-------------------------
+- add some tests for purge_cache
+- don't step into nested directories in purge_cache
+- catch errors while examining directory in purge_cache
+- only log error if it's not ENOENT in purge_cache
+- Add --serve-files-address parameter to nslave.
+- make make-manifest useable as pre-commit hook
+- is_good_baseurl(): eliminate some false positives
+
+2013-07-02 mwlib 0.15.9
+-------------------------
+- set timeout for makezip in postman
+- remove more template blacklisting/template exclusion handling code
+- get rid of template blacklisting/print templates in nslave and postman
+- mention that template blacklisting and print templates do not work anymore.
+- use tox 1.5's whitelist_externals in order to suppress warnings
+- fix imports in test_nserve.py and move it to tests directory
+
+2013-04-23 mwlib 0.15.8
+-------------------------
+- do not install pil in tox testenv
+- install Pillow
+- also fetch used images when fetching 'redirected revisions'
 
 2013-04-23 mwlib 0.15.7
 -------------------------
@@ -39,6 +95,12 @@ mwlib
 -------------------------
 .. NOTE::
   you'll have to adapt your start scripts, some programs have been renamed!
+
+.. NOTE::
+  Unfortunately the 'template blacklisting' and 'print templates'
+  functionality had to be removed in order to support the scribunto
+  extension. The documentation has not been updated and may still
+  mention those features.
 
 - nslave.py, nserve.py, postman.py have been renamed to nslave, nserve
   and postman

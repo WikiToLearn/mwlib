@@ -2,7 +2,7 @@
 
 """WSGI server interface to mw-render and mw-zip/mw-post"""
 
-import sys, os, time, re, shutil, StringIO
+import sys, os, time, re, shutil, StringIO, errno
 from hashlib import md5
 
 from mwlib import myjson as json
@@ -19,10 +19,6 @@ def make_collection_id(data):
         _version.version,
         'base_url',
         'script_extension',
-        'template_blacklist',
-        'template_exclusion_category',
-        'print_template_prefix',
-        'print_template_pattern',
         'login_credentials',
     ):
         sio.write(repr(data.get(key)))
@@ -42,9 +38,38 @@ def get_collection_dirs(cache_dir):
     """Generator yielding full paths of collection directories"""
 
     for dirpath, dirnames, filenames in os.walk(cache_dir):
+        new_dirnames = []
         for d in dirnames:
             if collection_id_rex.match(d):
                 yield os.path.join(dirpath, d)
+            else:
+                new_dirnames.append(d)
+        dirnames[:] = new_dirnames
+
+
+def _path_contains_entry_older_than(path, ts):
+    for fn in os.listdir(path):
+        if os.stat(os.path.join(path, fn)).st_mtime < ts:
+            return True
+    return False
+
+
+def _find_collection_dirs_to_purge(collection_dirs, ts):
+    for path in collection_dirs:
+        try:
+            if _path_contains_entry_older_than(path, ts):
+                yield path
+        except OSError, err:
+            if err.errno != errno.ENOENT:
+                log.ERROR("error while examining %r: %s" % (path, err))
+
+
+def _rmtree(path):
+    try:
+        shutil.rmtree(path)
+    except OSError, exc:
+        if exc.errno != errno.ENOENT:
+            log.ERROR('could not remove directory %r: %s' % (path, exc))
 
 
 def purge_cache(max_age, cache_dir):
@@ -57,14 +82,5 @@ def purge_cache(max_age, cache_dir):
     @type cache_dir: basestring
     """
 
-    now = time.time()
-    for path in get_collection_dirs(cache_dir):
-        for fn in os.listdir(path):
-            if now - os.stat(os.path.join(path, fn)).st_mtime > max_age:
-                break
-        else:
-            continue
-        try:
-            shutil.rmtree(path)
-        except Exception, exc:
-            log.ERROR('could not remove directory %r: %s' % (path, exc))
+    for path in _find_collection_dirs_to_purge(get_collection_dirs(cache_dir), time.time() - max_age):
+        _rmtree(path)

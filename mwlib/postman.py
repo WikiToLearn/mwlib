@@ -17,25 +17,11 @@ def get_collection_dir(collection_id):
     
 
 def _get_args(writer_options=None,
-              template_blacklist=None,
-              template_exclusion_category=None,
-              print_template_prefix=None,
-              print_template_pattern=None,
               language=None,
               zip_only=False, 
               **kw):
     
     args = []
-    
-        
-    if template_blacklist:
-        args.extend(['--template-blacklist', template_blacklist])
-    if template_exclusion_category:
-        args.extend(['--template-exclusion-category', template_exclusion_category])
-    if print_template_prefix:
-        args.extend(['--print-template-prefix', print_template_prefix])
-    if print_template_pattern:
-        args.extend(['--print-template-pattern', print_template_pattern])
 
     if zip_only:
         return args
@@ -151,7 +137,7 @@ class commands(object):
             g=gevent.spawn_later(0.2, report_mwzip_status, post_url, jobid, self.proxy._rpcclient.host, self.proxy._rpcclient.port)
 
             try:
-                self.qaddw(channel="makezip", payload=dict(params=params), jobid=jobid)
+                self.qaddw(channel="makezip", payload=dict(params=params), jobid=jobid, timeout=20 * 60)
             finally:
                 g.kill()
                 del g

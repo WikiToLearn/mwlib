@@ -140,9 +140,9 @@ include sandbox/expr.txt
 include sandbox/multicoll.py
 include sandbox/mw-serve-stresser.py
 include sandbox/rclient
-include sandbox/test_nserve.py
 include sandbox/time-expr.py
 include sandbox/time-parse.py
+include setup.cfg
 include setup.py
 include tests/canthus.mb.json
 include tests/fribidi-unicode-decode-error.zip
@@ -168,11 +168,13 @@ include tests/test_math_utils.py
 include tests/test_metabook.py
 include tests/test_miscutils.py
 include tests/test_mwscan.py
+include tests/test_nserve.py
 include tests/test_nshandling.py
 include tests/test_nuwiki.py
 include tests/test_odfwriter.py
 include tests/test_parse_params.py
 include tests/test_parser.py
+include tests/test_purge_cache.py
 include tests/test_redirect.py
 include tests/test_refine.py
 include tests/test_render.py

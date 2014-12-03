@@ -40,10 +40,18 @@ def merge_data(dst, src):
 
 
 class mwapi(object):
-    def __init__(self, apiurl):
+    def __init__(self, apiurl, username=None, password=None):
         self.apiurl = apiurl
         self.baseurl = apiurl  # XXX
-        self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
+
+        if username:
+            passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            passman.add_password(None, apiurl, username, password)
+            auth_handler = urllib2.HTTPBasicAuthHandler(passman)
+            self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.CookieJar()), auth_handler)
+        else:
+            self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
+        self.opener.addheaders = [('User-Agent', conf.user_agent)]
         self.edittoken = None
         self.qccount = 0
         self.api_result_limit = conf.get("fetch", "api_result_limit", 500, int)
@@ -345,30 +353,7 @@ def guess_api_urls(url):
 
 
 def get_collection_params(api):
-    r = api._post(action="expandtemplates",
-                         format="json",
-                         text="""
-template_blacklist={{Mediawiki:coll-template_blacklist_title}}
-template_exclusion_category={{Mediawiki:coll-exclusion_category_title}}
-print_template_pattern={{Mediawiki:coll-print_template_pattern}}
-""")
-
-    allowed = "template_blacklist template_exclusion_category print_template_pattern".split()
-    res = dict()
-    try:
-        txt = r["expandtemplates"]["*"]
-    except KeyError:
-        return res
-
-    for k, v in re.findall("([a-z_]+)=(.*)", txt):
-        v = v.strip()
-
-        if v.startswith("[[") or not v:
-            continue
-
-        if k in allowed:
-            res[str(k)] = v
-    return res
+    return dict()
 
 
 def main():
